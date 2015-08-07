@@ -13,30 +13,60 @@ ArgRouter.parseSignature = function (signature){
 	
 	for(var i=0; i<typesRaw.length; i++){
 		var type = typesRaw[i];
-		////console.log("add type : " + type)
 		if(type != "") types.push(type); 
 	}
 	return types;
 }
+
+
+ArgRouter.Route = function ArgRouterRoute(signature, callback){
+	this.signature = signature
+	this.parameters = ArgRouter.parseSignature(signature);
+	this.callback = callback;
+
+	var argValidate = [];
+	
+	for(var i=0; i<this.parameters.length; i++){
+		argValidate[i] = ArgRouter.parseType(this.parameters[i]);
+	}
+	
+	this.validate = validate = function validateRoute(args){
+		var i=0;
+		for(; i<args.length; i++){
+
+			if(!(argValidate[i](args[i]))){ 
+				return false;
+			}else{
+				;
+			}
+		}
+		return true
+	}		
+}
+
+
+
 
 ArgRouter.parseType = function (t){
 
 	var props = t.split(/\./gmi)
 	t=props[0];
 	
-	var prop_condition = function testProperties(v, t){
-		for(var i=1; i<props.length; i++){
-			var prop = props[i];
-			if(v[prop] == null || v[prop] == undefined){
-				return false;
-			}
+	var prop_condition = null;
+	if(props.length > 1){
+	prop_condition = function testProperties(v, t){
+			for(var i=1; i<props.length; i++){
+				var prop = props[i];
+				if(v[prop] == null || v[prop] == undefined){
+					return false;
+				}
+			};
+			return true;
+			
 		};
-		return true;
-		
-	};
+	}
 
-
-	if(!t) return function testNoParameter(v){ console.log("test no param"); return v === undefined};
+	if(!t) return ArgRouter.testNoParameter;
 
 	var type_condition = null;
 	if(t=="any") type_condition = ArgRouter.testAnyParameter;
@@ -50,91 +80,69 @@ ArgRouter.parseType = function (t){
 	
 	
 	return function testParameter(v){
-		return type_condition(v, t) && prop_condition(v, t);
+		return type_condition(v, t) && (!prop_condition || prop_condition(v, t));
 	}
 }
 
 
-ArgRouter.testAnyParameter = function testAnyParameter(v, t){return true}
-ArgRouter.testFunParameter = function testFunParameter(v, t){return typeof v == "function"}
-ArgRouter.testNumParameter = function testNumParameter(v, t){return typeof v == "number"}
-ArgRouter.testStrParameter = function testStrParameter(v, t){return typeof v == "string"}
-ArgRouter.testBoolParameter = function testBoolParameter(v, t){return typeof v == "boolean"}
-ArgRouter.testObjParameter = function testObjParameter(v, t){return typeof v == "object"}
-ArgRouter.testArrParameter = function testArrParameter(v, t){return ArgRouter.is_numeric(v.length)}
-ArgRouter.testCustomTypeParameter = function testCustomTypeParameter(v, t){return v instanceof window[t]}
+ArgRouter.testNoParameter = function testNoParameter(v){ return v === undefined };
+ArgRouter.testAnyParameter = function testAnyParameter(v, t){ return true };
+ArgRouter.testFunParameter = function testFunParameter(v, t){ return typeof v == "function" };
+ArgRouter.testNumParameter = function testNumParameter(v, t){ return typeof v == "number" };
+ArgRouter.testStrParameter = function testStrParameter(v, t){ return typeof v == "string" };
+ArgRouter.testBoolParameter = function testBoolParameter(v, t){ return typeof v == "boolean" };
+ArgRouter.testObjParameter = function testObjParameter(v, t){ return typeof v == "object" };
+ArgRouter.testArrParameter = function testArrParameter(v, t){ return ArgRouter.is_numeric(v.length) };
+ArgRouter.testCustomTypeParameter = function testCustomTypeParameter(v, t){return v instanceof window[t] };
 
 
 function ArgRouter(){
-	var signatures = [];
-	var callbacks = [];
-	var validators = [];
-	var rule_length_index = [];
-	this.add = function(signature, callback){
-		//console.log("adding " + signature)
-		var next = this.length();
-		var parsed = ArgRouter.parseSignature(signature)
-		signatures[next] = parsed;
-		if(!rule_length_index[parsed.length]) rule_length_index[parsed.length] = [];
-		
-		rule_length_index[parsed.length].push(next);
-		
-		callbacks[next] = callback;
+	var routes = [];
+	var route_length_index = [];
+	this.add = function addRoute(signature, callback){
+	var next = this.length();
 		
 		
-		(function(parsed){
-			var argValidate = [];
-			
-			for(var i=0; i<parsed.length; i++){
-				argValidate[i] = ArgRouter.parseType(parsed[i]);
-			}
-			
-			var validate = function(args){
-				var i=0;
-				for(; i<args.length; i++){
-					if(!argValidate[i](args[i])) return false;
-				}
-				return i==args.length
-			}
-			validators.push(validate);
-		})(parsed)
+		var newroute = new ArgRouter.Route(signature, callback);
 		
+		routes[next] = newroute;
+		
+		var num_param = newroute.parameters.length
+		if(!route_length_index[num_param]) route_length_index[num_param] = [];
+		route_length_index[num_param].push(next);
+		return this;
 	};
-	this.rule = function(i){
+	this.getRoute = function getRoute(i){
 		if(i<0 || i>=this.length) throw new Error("out of bounds")
-		//console.log("rule #"+i);
-		//console.log(signatures[i]);
-		return {
-			signature: signatures[i],
-			callback: callbacks[i],
-			validate: validators[i],
-		}
+		return routes[i];
 	};
-	this.candidates = function(num_args){
+	this.getCandidates = function getCandidates(num_args){
 		var res = [];
-		//for(var i=num_args; i<rule_length_index.length; i++){
-			if(rule_length_index[num_args]) res = rule_length_index[num_args].splice(0);
-		//}
+		for(var i=num_args; i<route_length_index.length; i++){
+			if(route_length_index[i]) res = res.concat(route_length_index[i]);
+		}
 		return res;
 	}
 
-	this.length = function(){
-		return signatures.length;
+	this.length = function length(){
+		return routes.length;
 	};
 }
 
 ArgRouter.prototype.route = function(ctx, args){
 	ctx = ctx || {};
 	var l = args.length
-	var possibles = this.candidates(l);
-		
+	var possibles = this.getCandidates(l);
 	for(var i=0; i<possibles.length; i++){
-		var rule_index = possibles[i];
-		if(this.rule(rule_index).validate(args)){
-			this.rule(rule_index).callback.apply(ctx, args);
+		var rule_index = possibles[i],
+			a_route = this.getRoute(rule_index);
+			
+		if(a_route.validate(args)){
+			a_route.callback.apply(ctx, args);
 			return true;
+		}else{
+			
 		}
-	
 	}
 	return false;
 }
@@ -193,6 +201,6 @@ ArgRouter.prototype.combine = function(/* hash... */){
 		this.add(old, combs[old]);
 	}
    
-  //return combs;
+  return this;
 }
 

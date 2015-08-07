@@ -1,38 +1,40 @@
 function testCombine(){
 		var ctx = {};
-		var router = new ArgRouter();
-		var hash1 = {
-			"num":function(num){
-				console.log("num " + num); 
-			},
-			"bool,bool":function(b,b2){
-				console.log("bool " + b);
-				console.log("bool " + b2);
-			}
-		}
-		var hash2 = {
-			"arr":function(arr){
-				console.log("arr " + arr); 
-			},
-			"obj":function(o){
-				console.log("o " + o); 
-			}
-		}
 		
-		var hash3 = {
-			"":function(){
-				console.log("no arg cb"); 
-			},
-			"num":function(num){
-				console.log("num " + num); 
-			}
-		}
-
-		router.combine(hash1, hash2, hash3);
-		for(var i=0;i<1000;i++)router.route(ctx, arguments);
-		if(!router.route(ctx, arguments)) console.log("no route found")
+		//for(var i=0;i<1000;i++)router.route(ctx, arguments);
+		if(!testCombine.router.route(ctx, arguments)) console.log("no route found 1"); else console.log("found route 1");
+		if(!testCombine.router.route(ctx, arguments)) console.log("no route found 2"); else console.log("found route 2");
 }
 
+testCombine.router = new ArgRouter();
+var hash1 = {
+	"num":function(num){
+		console.log("num " + num); 
+	},
+	"bool,bool":function(b,b2){
+		console.log("bool " + b);
+		console.log("bool " + b2);
+	}
+}
+var hash2 = {
+	"arr":function(arr){
+		console.log("arr " + arr); 
+	},
+	"obj":function(o){
+		console.log("o " + o); 
+	}
+}
+
+var hash3 = {
+	"":function(){
+		console.log("no arg cb"); 
+	},
+	"num":function(num){
+		console.log("num " + num); 
+	}
+}
+
+testCombine.router.combine(hash1, hash2, hash3);
 
 
 function test(){
