@@ -50,3 +50,94 @@ function test(){
 		console.log("no route found")
 	}
 }
+
+
+function testDecorator(){
+	
+	var test = ArgRouter.decorate(
+		{a:null,b:null},
+		"(num)", 		function(a){this.a=a;console.log("one num")},
+		"(num,num)", 	function(a,b){this.a=a;this.b=b;console.log("two num")},
+		"(bool,bool)", 	function(a,b){this.a=a;this.b=b;console.log("two bool")},
+		function test(ctx){
+			console.log("test called");
+			console.log(ctx);
+		}
+	);
+	test(true, false);
+	console.log("decorated " + test.name)
+}
+
+
+function testDecoratorConstructor(){
+	
+	var Test = ArgRouter.decorate(
+		// init
+		{	
+			a: null,
+			b: null
+		},
+		// signatures
+		"()", function(a){ 
+			this.a = -1;
+			this.b = -1;
+			console.log("no arg") ;
+		},
+		"(num)", function(a){ 
+			this.a=a; 
+			console.log("one num") ;
+		},
+		"(num, num)", function(a,b){ 
+			this.a=a; 
+			this.b=b; 
+			console.log("two num"); 
+		},
+		"(bool, bool)", 	function(a,b){ 
+			this.a=a; 
+			this.b=b; 
+			console.log("two bool") 
+		},
+		// ctor
+		function Test(ctx){
+			if(ctx){
+				console.log("Test called");
+				console.log(ctx);
+				ctx.__merge__(this);
+			}
+		}
+	);
+	var t = new Test();
+	// member
+	Test.prototype.myMethod = function(){console.log("myMethod called"); console.log("this");console.log(this)}
+	console.log(t)
+	console.log("is instance of Test " + (t instanceof Test))
+	console.log("proto " + Test.prototype)
+	console.log("proto ctor " + Test.prototype.constructor)
+	console.log("ctor " + t.constructor)
+	//console.log("decorated " + t.constructor)
+	console.log("name " + Test.name)
+	t.myMethod();
+	// ctor routes
+	console.log(Test.__routes__.join(",\n"))
+}
+
+
+
+function testDecoratorMethod(){
+	function Ctor(){}
+	Ctor.prototype.test = ArgRouter.decorate(
+		{a:null,b:null},
+		"(num)", 		function(a){this.a=a;console.log("one num")},
+		"(num,num)", 	function(a,b){this.a=a;this.b=b;console.log("two num")},
+		"(bool,bool)", 	function(a,b){this.a=a;this.b=b;console.log("two bool")},
+		function test(ctx){
+			console.log("test called");
+			console.log(ctx);
+			console.log("instance of Ctor: " + (this instanceof Ctor))
+		}
+	);
+	var c = new Ctor();
+	c.test();
+	console.log("decorated " + c.test.name)
+}
+
