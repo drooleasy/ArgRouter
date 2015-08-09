@@ -145,7 +145,7 @@
 	ArgRouter.prototype.route = function(ctx, args){
 		ctx = ctx || {};
 		var l = args.length
-		console.log("arg length " + l)
+		//console.log("arg length " + l)
 		var possibles = this.getCandidates(l);
 		for(var i=0; i<possibles.length; i++){
 			var rule_index = possibles[i],
@@ -161,7 +161,12 @@
 		return false;
 	}
 
-	ArgRouter.prototype.combine = function(/* hash... */){
+	ArgRouter.combine = function(/* hash... */){
+	  
+	  //console.log("combine")
+	  //console.log("this")
+	  //console.log(this)
+	  
 	  var combs = {};
 	  var combs_args = {};
 	  for(var prop in arguments[0]){
@@ -260,10 +265,10 @@
 
 	ArgRouter.decorate = function(/* ctx, (sig, cb | {})+, fun_to_decorate */){
 		var router = new ArgRouter();
-		ctx = arguments[0] || {};
+		var ctx = arguments[0] || {};
 		ctx.__merge__ = function(target){
 			for(var prop in ctx){
-				if(prop != "__merge__") target[prop] = ctx[prop];
+				if(prop != "__merge__" && prop != "__this__") target[prop] = ctx[prop];
 			}
 			return target;
 		}
@@ -298,6 +303,7 @@
 		};   
 		
 		var decorated = function(){
+			ctx.__this__ = this;
 			if(!router.route.call(router, ctx, arguments)) throw "No route found";
 			return fun.call(this, ctx);
 		}
