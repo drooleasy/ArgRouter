@@ -23,15 +23,19 @@ The basic synopsis is this:
 			this.y = point.y;
 		},
 		// the main part of the function 
-		function(ctx){
+		function my_function(ctx){
 			// do whatever you have to with the inited object
 			console.log(ctx.x);
 			console.log(ctx.y);
 		}
 	);
 
-There's several bas type, but you can add custom ones.
+my_function will now accepts argument in form of two numbers or an object with x and y properties and throw an error for everything else.
 
-There's also a fonction to easy create combinations of signatures (ie two points defined either by two numbers or an object with x and y properties).
+This also works for methods and constructors.
+
+There's several base types, but you can add custom ones.
+
+There's also a function to easy create combinations of signatures (ie two points defined either by two numbers or an object with x and y properties).
 
 More doc to come. 
