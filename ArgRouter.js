@@ -308,7 +308,6 @@
 			return fun.call(this, ctx);
 		}
 		if(fun.name){ 
-			console.log("rename decorated to " + fun.name)
 			decorated = renameFunction(fun.name, decorated);
 		}
 		decorated.prototype.constructor = fun;
