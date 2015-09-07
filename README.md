@@ -13,18 +13,18 @@ The basic synopsis is this:
 			// bare/default init object
 		},
 		// a road (two numbers) and its callback
-		"num,num",function(x,y){
+		"num,num",function(x,y){ // arguments are the signature parameters
 			this.x = x; // this is the init object
 			this.y = y;
 		},
 		// another road (for a 'pointish' object) and its callback
-		"{x,y}", function(point){
+		"{x,y}", function(point){ // argument is the signature parameter
 			this.x = point.x; // this is the init object
 			this.y = point.y;
 		},
 		// the main part of the function 
-		function my_function(ctx){
-			// do whatever you have to with the inited object
+		function my_function(ctx){ // argument is the inited object if a route was matched
+			// do whatever you have to with the inited object (ctx)
 			console.log(ctx.x);
 			console.log(ctx.y);
 		}
